@@ -1,0 +1,6 @@
+{# Colour-codes an order status. `status` is the raw value, `label` the display text. #}
+<span class="pill
+  {% if status == 'DELIVERED' %}pill-ok
+  {% elif status == 'CANCELLED' %}pill-danger
+  {% elif status == 'PENDING' %}pill-warn
+  {% else %}pill-info{% endif %}">{{ label }}</span>

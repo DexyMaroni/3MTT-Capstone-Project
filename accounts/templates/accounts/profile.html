@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Your profile &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<div class="narrow">
+  <h1>Your profile</h1>
+  <p class="muted">
+    Signed in as <strong>{{ user.username }}</strong> &middot; {{ user.get_role_display }} account
+  </p>
+
+  <form method="post" class="card form-card">
+    {% csrf_token %}
+    {% include 'partials/_form_fields.html' with form=form %}
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

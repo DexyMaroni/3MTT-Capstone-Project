@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Django
+*.log
+local_settings.py
+
+# The development database. It holds demo accounts and order history that
+# "manage.py migrate && manage.py seed_demo" recreates from scratch, so there
+# is nothing here worth versioning -- and password hashes should not be in a
+# public repository even for throwaway accounts.
+db.sqlite3
+db.sqlite3-journal
+
+# Output of "collectstatic". Generated from static/, never edited by hand.
+staticfiles/
+
+# Uploaded and fetched produce photos (~4 MB of binaries). "manage.py
+# fetch_images" rebuilds the demo set from Wikimedia Commons, and real uploads
+# belong on object storage rather than in git history, where they can never be
+# removed. See README for the one command a fresh clone needs.
+media/
+
+# Secrets. Environment variables are read in settings.py; keep the actual
+# values out of the repository.
+.env
+.env.*
+
+# Editors and OS noise
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

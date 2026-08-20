@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete {{ listing.title }} &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<div class="narrow">
+  <div class="card form-card">
+    <h1>Delete this listing?</h1>
+    <p>
+      &ldquo;{{ listing.title }}&rdquo; will be removed from the marketplace.
+      Past orders that included it are kept.
+    </p>
+    <p class="muted">
+      If you only want to stop selling it for now, edit the listing and
+      uncheck &ldquo;is active&rdquo; instead.
+    </p>
+
+    {# Deletion goes through POST so it can't happen by following a link. #}
+    <form method="post" class="form-actions">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Yes, delete it</button>
+      <a class="btn btn-ghost" href="{% url 'listings:dashboard' %}">Keep it</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}FarmLink Marketplace{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/main.css' %}?v={{ ASSET_V }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="{% url 'listings:list' %}">
+        <span class="brand-mark">FL</span>
+        <span>FarmLink</span>
+      </a>
+
+      <form class="header-search" action="{% url 'listings:list' %}" method="get" role="search">
+        <input type="search" name="q" value="{{ search_term|default:'' }}"
+               placeholder="Search produce, or a farmer's town..." aria-label="Search listings">
+        <button type="submit">Search</button>
+      </form>
+
+      <nav class="header-nav">
+        {% if user.is_authenticated %}
+          {% if user.is_farmer %}
+            <a href="{% url 'listings:dashboard' %}">Dashboard</a>
+            <a href="{% url 'orders:sales' %}">Sales</a>
+          {% else %}
+            <a href="{% url 'orders:list' %}">My orders</a>
+            <a class="cart-link" href="{% url 'orders:cart' %}">
+              Cart <span class="cart-badge" data-cart-count>{{ cart_item_count }}</span>
+            </a>
+          {% endif %}
+          <div class="user-menu">
+            <a href="{% url 'accounts:profile' %}">{{ user.display_name }}</a>
+            <form action="{% url 'accounts:logout' %}" method="post" class="inline-form">
+              {% csrf_token %}
+              <button type="submit" class="link-button">Log out</button>
+            </form>
+          </div>
+        {% else %}
+          <a href="{% url 'accounts:login' %}">Log in</a>
+          <a class="btn btn-primary btn-sm" href="{% url 'accounts:register' %}">Sign up</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  {% comment %}
+  Toast region. Rendered even when empty, for two reasons: the cart
+  JavaScript always has somewhere to put a notification (it used to build
+  its own container in the wrong place), and screen readers get a live
+  region that exists before the announcement arrives -- one injected at
+  the same moment as its content is often missed.
+  {% endcomment %}
+  <ul class="messages" data-messages role="status" aria-live="polite">
+    {% for message in messages %}
+      <li class="message message-{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>FarmLink &mdash; connecting farmers directly to buyers.</p>
+      <p class="muted">3MTT Capstone Project</p>
+    </div>
+  </footer>
+
+  {% comment %}
+  Add-to-cart confirmation. A native <dialog> rather than a div, because
+  showModal() brings focus trapping, Esc-to-close and an inert background
+  with no JavaScript of our own. Empty until the cart script fills it in;
+  buyers who have JavaScript off never see it, they just get redirected to
+  the cart page as before.
+  {% endcomment %}
+  <dialog class="cart-dialog" data-cart-dialog aria-labelledby="cart-dialog-title">
+    <form method="dialog" class="cart-dialog-dismiss">
+      <button type="submit" class="icon-button" aria-label="Close">&times;</button>
+    </form>
+
+    <p class="cart-dialog-heading" id="cart-dialog-title">
+      <span class="cart-dialog-tick" aria-hidden="true">&check;</span>
+      Added to cart
+    </p>
+
+    <div class="cart-dialog-item">
+      <img data-dialog-image alt="" hidden>
+      <div>
+        <p class="cart-dialog-name" data-dialog-name></p>
+        <p class="cart-dialog-line" data-dialog-line></p>
+      </div>
+    </div>
+
+    <p class="notice notice-warn cart-dialog-note" data-dialog-note hidden></p>
+
+    <p class="cart-dialog-total">
+      Cart total: <strong data-dialog-total></strong>
+    </p>
+
+    <div class="cart-dialog-actions">
+      <form method="dialog">
+        <button type="submit" class="btn btn-ghost">Keep shopping</button>
+      </form>
+      <a class="btn btn-primary" href="{% url 'orders:cart' %}">View cart</a>
+    </div>
+  </dialog>
+
+  <script src="{% static 'js/main.js' %}?v={{ ASSET_V }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

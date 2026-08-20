@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Sales &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<h1>Sales</h1>
+<p class="muted">Every order line that includes your produce.</p>
+
+{% if page_obj.object_list %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>Produce</th>
+          <th>Qty</th>
+          <th>Amount</th>
+          <th>Buyer</th>
+          <th>Placed</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in page_obj %}
+          <tr>
+            <td><a href="{{ item.order.get_absolute_url }}">{{ item.order.reference }}</a></td>
+            <td>{{ item.title }}</td>
+            <td>{{ item.quantity }} {{ item.unit }}</td>
+            <td>&#8358;{{ item.subtotal|floatformat:2 }}</td>
+            <td>{{ item.order.buyer.display_name }}</td>
+            <td>{{ item.order.created_at|date:'j M Y' }}</td>
+            <td>{% include 'orders/_status_pill.html' with status=item.order.status label=item.order.get_status_display %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page_obj.has_other_pages %}
+    <nav class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+      {% endif %}
+      <span class="page-info">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        &middot; {{ page_obj.paginator.count }} sale{{ page_obj.paginator.count|pluralize }}
+      </span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Next</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% else %}
+  <div class="empty-state">
+    <h3>No sales yet</h3>
+    <p>Once a buyer orders your produce it will appear here.</p>
+    <a class="btn btn-primary" href="{% url 'listings:dashboard' %}">Back to dashboard</a>
+  </div>
+{% endif %}
+{% endblock %}

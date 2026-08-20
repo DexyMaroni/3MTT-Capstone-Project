@@ -1,0 +1,55 @@
+{# One produce card in the marketplace grid. #}
+<article class="card listing-card">
+  {% comment %}
+  This image link points at the same page as the title link below it, so to a
+  screen reader it was two identical links with the same name, and two stops
+  in the tab order for one destination. Hiding it and taking it out of the tab
+  order leaves the title as the single announced link. The stock badge is
+  repeated as visually-hidden text inside that link so the warning is not lost
+  along with it.
+  {% endcomment %}
+  <a href="{{ listing.get_absolute_url }}" class="card-image"
+     aria-hidden="true" tabindex="-1">
+    {% if listing.image %}
+      <img src="{{ listing.image.url }}" alt="" loading="lazy">
+    {% else %}
+      <div class="image-placeholder">{{ listing.title|first|upper }}</div>
+    {% endif %}
+    {% if listing.quantity_available < 10 %}
+      <span class="badge badge-warn">Only {{ listing.quantity_available }} left</span>
+    {% endif %}
+  </a>
+
+  <div class="card-body">
+    <p class="card-category">{{ listing.category.name }}</p>
+    <h3 class="card-title">
+      <a href="{{ listing.get_absolute_url }}">
+        {{ listing.title }}
+        {% if listing.quantity_available < 10 %}
+          <span class="sr-only">
+            &mdash; only {{ listing.quantity_available }}
+            {{ listing.unit_label }} left
+          </span>
+        {% endif %}
+      </a>
+    </h3>
+    <p class="card-meta">
+      {{ listing.farmer.display_name }}{% if listing.farmer.location %} &middot; {{ listing.farmer.location }}{% endif %}
+    </p>
+    <p class="card-price">
+      &#8358;{{ listing.price|floatformat:2 }}
+      <span class="per-unit">per {{ listing.get_unit_display|lower }}</span>
+    </p>
+
+    {% if user.is_authenticated and user.is_buyer %}
+      <form class="add-to-cart-form" method="post"
+            action="{% url 'orders:add_to_cart' listing.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit" class="btn btn-primary btn-block">Add to cart</button>
+      </form>
+    {% else %}
+      <a href="{{ listing.get_absolute_url }}" class="btn btn-outline btn-block">View details</a>
+    {% endif %}
+  </div>
+</article>

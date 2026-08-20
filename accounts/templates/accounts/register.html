@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign up &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<div class="narrow">
+  <h1>Create your account</h1>
+  <p class="muted">Sell what you grow, or buy straight from the people who grew it.</p>
+
+  <form method="post" class="card form-card">
+    {% csrf_token %}
+    {% include 'partials/_form_fields.html' with form=form %}
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Create account</button>
+    </div>
+  </form>
+
+  <p class="form-footnote">
+    Already registered? <a href="{% url 'accounts:login' %}">Log in</a>
+  </p>
+</div>
+{% endblock %}

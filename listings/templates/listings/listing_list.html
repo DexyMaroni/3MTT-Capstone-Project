@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Marketplace &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Fresh produce, straight from the farm</h1>
+  <p>Browse what farmers are harvesting right now and order directly &mdash; no middlemen.</p>
+</section>
+
+<div class="layout-with-sidebar">
+  <aside class="sidebar">
+    <h2 class="sidebar-title">Categories</h2>
+    <ul class="category-list">
+      <li>
+        <a href="{% url 'listings:list' %}"
+           class="{% if not active_category %}active{% endif %}">All produce</a>
+      </li>
+      {% for category in categories %}
+        <li>
+          <a href="?category={{ category.slug }}"
+             class="{% if active_category == category.slug %}active{% endif %}">
+            {{ category.name }}
+            <span class="count">{{ category.listing_count }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  <div>
+    <div class="list-toolbar">
+      <p class="result-count">
+        {{ page_obj.paginator.count }} listing{{ page_obj.paginator.count|pluralize }}
+        {% if search_term %}for &ldquo;{{ search_term }}&rdquo;{% endif %}
+      </p>
+
+      {# Submitting on change keeps the sort control working without JavaScript. #}
+      <form method="get" class="sort-form" data-autosubmit>
+        {% if search_term %}<input type="hidden" name="q" value="{{ search_term }}">{% endif %}
+        {% if active_category %}<input type="hidden" name="category" value="{{ active_category }}">{% endif %}
+        <label for="sort">Sort by</label>
+        <select name="sort" id="sort">
+          <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+          <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: low to high</option>
+          <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: high to low</option>
+          <option value="title" {% if sort == 'title' %}selected{% endif %}>Name A&ndash;Z</option>
+        </select>
+        <noscript><button type="submit">Apply</button></noscript>
+      </form>
+    </div>
+
+    {% if page_obj %}
+      <div class="listing-grid">
+        {% for listing in page_obj %}
+          {% include 'listings/_listing_card.html' with listing=listing %}
+        {% endfor %}
+      </div>
+
+      {% if page_obj.has_other_pages %}
+        <nav class="pagination">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}">Previous</a>
+          {% endif %}
+          <span class="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if querystring %}&amp;{{ querystring }}{% endif %}">Next</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% endif %}
+
+    {% if not page_obj.object_list %}
+      <div class="empty-state">
+        <h3>Nothing here yet</h3>
+        <p>
+          {% if search_term or active_category %}
+            No listings match that. <a href="{% url 'listings:list' %}">Clear filters</a>
+          {% else %}
+            No produce has been listed yet. Check back soon.
+          {% endif %}
+        </p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

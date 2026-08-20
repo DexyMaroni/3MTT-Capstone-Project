@@ -1,0 +1,1034 @@
+<title>Inside FarmLink</title>
+
+<style>
+  /* ---- Tokens: light is the base set ---------------------------------- */
+  :root {
+    --paper:      #f5f7f2;
+    --surface:    #ffffff;
+    --ink:        #151d17;
+    --ink-soft:   #414e45;
+    --ink-mute:   #5d6b60;
+    --rule:       #dce2d7;
+    --rule-soft:  #e8ede4;
+    --accent:     #1f6b3f;
+    --accent-bg:  #e5efe7;
+    --amber:      #8a5a0d;
+    --amber-bg:   #f6eeda;
+    --clay:       #9c3b2e;
+    --clay-bg:    #f7e6e2;
+    --code-bg:    #eef1ea;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+    --mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, Menlo, monospace;
+
+    --col: 68ch;
+  }
+
+  /* System-dark, unless the viewer explicitly chose light */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #0f1310;
+      --surface:   #161c18;
+      --ink:       #e3e9e1;
+      --ink-soft:  #bcc7bd;
+      --ink-mute:  #8d9b91;
+      --rule:      #27312b;
+      --rule-soft: #1e2620;
+      --accent:    #63c087;
+      --accent-bg: #16281d;
+      --amber:     #d5a44f;
+      --amber-bg:  #2a2314;
+      --clay:      #dc8171;
+      --clay-bg:   #2e1c19;
+      --code-bg:   #1a211c;
+    }
+  }
+
+  /* Explicit dark choice wins over a light OS */
+  :root[data-theme="dark"] {
+    --paper:     #0f1310;
+    --surface:   #161c18;
+    --ink:       #e3e9e1;
+    --ink-soft:  #bcc7bd;
+    --ink-mute:  #8d9b91;
+    --rule:      #27312b;
+    --rule-soft: #1e2620;
+    --accent:    #63c087;
+    --accent-bg: #16281d;
+    --amber:     #d5a44f;
+    --amber-bg:  #2a2314;
+    --clay:      #dc8171;
+    --clay-bg:   #2e1c19;
+    --code-bg:   #1a211c;
+  }
+
+  /* ---- Base ------------------------------------------------------------ */
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.62;
+    margin: 0;
+    padding: 0 1.5rem 6rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1000px; margin: 0 auto; }
+
+  /* ---- Masthead -------------------------------------------------------- */
+  .masthead {
+    border-bottom: 2px solid var(--ink);
+    padding: 4rem 0 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1.25rem;
+  }
+  .masthead h1 {
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+    line-height: 1.04;
+    font-weight: 600;
+    margin: 0 0 1rem;
+    text-wrap: balance;
+    letter-spacing: -.015em;
+  }
+  .standfirst {
+    font-size: 1.18rem;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .masthead-meta {
+    font-family: var(--mono);
+    font-size: .74rem;
+    color: var(--ink-mute);
+    margin-top: 1.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  /* ---- Sections: number in a left rail --------------------------------- */
+  section {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    gap: 0 2rem;
+    margin-bottom: 4.5rem;
+  }
+  .sec-num {
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--accent);
+    padding-top: .55rem;
+    letter-spacing: .06em;
+  }
+  .sec-body { max-width: var(--col); min-width: 0; }
+  section > h2 {
+    grid-column: 2;
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 1.1rem;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+  section > .sec-num + h2 { margin-top: 0; }
+
+  h3 {
+    font-size: 1.12rem;
+    font-weight: 600;
+    margin: 2.25rem 0 .6rem;
+    color: var(--ink);
+  }
+  p { margin: 0 0 1.1rem; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+
+  strong { font-weight: 600; }
+  em.term { font-style: normal; font-family: var(--mono); font-size: .9em; }
+
+  /* ---- Code ------------------------------------------------------------ */
+  code {
+    font-family: var(--mono);
+    font-size: .84em;
+    background: var(--code-bg);
+    padding: .1em .35em;
+    border-radius: 3px;
+  }
+  pre {
+    font-family: var(--mono);
+    font-size: .8rem;
+    line-height: 1.62;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    padding: 1rem 1.15rem;
+    overflow-x: auto;
+    margin: 0 0 1.2rem;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  .cm { color: var(--ink-mute); font-style: italic; }
+  .hl { color: var(--accent); font-weight: 600; }
+  .bad { color: var(--clay); }
+
+  .filepath {
+    font-family: var(--mono);
+    font-size: .72rem;
+    color: var(--ink-mute);
+    letter-spacing: .02em;
+    margin: 0 0 .4rem;
+  }
+
+  /* ---- Callouts -------------------------------------------------------- */
+  .note {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--surface);
+    padding: 1.1rem 1.25rem;
+    margin: 0 0 1.2rem;
+  }
+  .note p:last-child { margin-bottom: 0; }
+  .note-label {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: .5rem;
+  }
+  .note-gotcha { background: var(--amber-bg); border-color: transparent; }
+  .note-gotcha .note-label { color: var(--amber); }
+  .note-wrong { background: var(--clay-bg); border-color: transparent; }
+  .note-wrong .note-label { color: var(--clay); }
+  .note-key { background: var(--accent-bg); border-color: transparent; }
+  .note-key .note-label { color: var(--accent); }
+
+  /* ---- Figures --------------------------------------------------------- */
+  figure {
+    margin: 2rem 0;
+    max-width: 100%;
+  }
+  .fig-wide { max-width: 860px; }
+  figure svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    color: var(--ink-soft);
+  }
+  figcaption {
+    font-family: var(--mono);
+    font-size: .72rem;
+    line-height: 1.55;
+    color: var(--ink-mute);
+    margin-top: .9rem;
+    padding-top: .6rem;
+    border-top: 1px solid var(--rule);
+    max-width: 62ch;
+  }
+  .svg-box { fill: var(--surface); stroke: currentColor; stroke-width: 1.2; }
+  .svg-box-accent { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 1.5; }
+  .svg-label { font-family: var(--mono); font-size: 12px; fill: var(--ink); }
+  .svg-sub { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-mute); }
+  .svg-edge { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-mute); }
+  .svg-edge-accent { font-family: var(--mono); font-size: 10.5px; fill: var(--accent); }
+  .svg-line { stroke: currentColor; stroke-width: 1.2; fill: none; }
+  .svg-line-accent { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+  .svg-line-clay { stroke: var(--clay); stroke-width: 1.4; fill: none; }
+  .svg-dash { stroke-dasharray: 4 3; }
+
+  /* ---- Q&A list -------------------------------------------------------- */
+  .qa { margin: 0; padding: 0; list-style: none; }
+  .qa > li {
+    border-top: 1px solid var(--rule);
+    padding: 1.15rem 0;
+  }
+  .qa > li:last-child { border-bottom: 1px solid var(--rule); }
+  .qa .q {
+    font-weight: 600;
+    margin: 0 0 .5rem;
+  }
+  .qa .a { margin: 0; color: var(--ink-soft); font-size: .95rem; }
+
+  /* ---- Map table ------------------------------------------------------- */
+  .map-scroll { overflow-x: auto; margin: 0 0 1.2rem; }
+  table.map {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: .82rem;
+    font-family: var(--mono);
+  }
+  table.map th, table.map td {
+    text-align: left;
+    padding: .55rem .8rem .55rem 0;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+    white-space: nowrap;
+  }
+  table.map td:last-child { white-space: normal; font-family: var(--serif); font-size: 1rem; }
+  table.map th {
+    font-size: .68rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    border-bottom-color: var(--rule);
+  }
+  table.map td.layer { color: var(--accent); }
+
+  /* ---- Footer ---------------------------------------------------------- */
+  .colophon {
+    border-top: 2px solid var(--ink);
+    padding-top: 1.5rem;
+    margin-top: 5rem;
+    font-family: var(--mono);
+    font-size: .74rem;
+    color: var(--ink-mute);
+    line-height: 1.7;
+  }
+
+  /* ---- Responsive ------------------------------------------------------ */
+  @media (max-width: 720px) {
+    body { font-size: 17px; padding: 0 1.15rem 4rem; }
+    section { grid-template-columns: 1fr; gap: 0; }
+    section > h2 { grid-column: 1; }
+    .sec-num { padding-top: 0; margin-bottom: .35rem; }
+    .masthead { padding-top: 2.5rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">Capstone / Code Walkthrough</p>
+  <h1>Inside FarmLink</h1>
+  <p class="standfirst">
+    How a request becomes a page, why the order tables duplicate data on purpose,
+    and what happens inside the checkout transaction — the parts of this codebase
+    worth being able to explain out loud.
+  </p>
+  <div class="masthead-meta">
+    <span>Django 6.1</span>
+    <span>3 apps / 39 tests</span>
+    <span>SQLite → PostgreSQL</span>
+  </div>
+</header>
+
+<!-- ================================================================= -->
+<section>
+  <p class="sec-num">01</p>
+  <h2>What talks to what</h2>
+  <div class="sec-body">
+    <p>
+      Three apps, split by <em>what they own</em> rather than by what they do.
+      This is the split Django rewards: each app owns its models, and the
+      dependencies point one way.
+    </p>
+
+    <div class="map-scroll">
+      <table class="map">
+        <thead>
+          <tr><th>App</th><th>Owns</th><th>Depends on</th><th>In one sentence</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="layer">accounts</td>
+            <td>User</td>
+            <td>—</td>
+            <td>Who someone is, and which side of the market they're on.</td>
+          </tr>
+          <tr>
+            <td class="layer">listings</td>
+            <td>Category, Listing</td>
+            <td>accounts</td>
+            <td>What's for sale, and the farmer tools to manage it.</td>
+          </tr>
+          <tr>
+            <td class="layer">orders</td>
+            <td>Cart, CartItem, Order, OrderItem</td>
+            <td>accounts, listings</td>
+            <td>Turning a selection into a committed purchase.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <code>accounts</code> depends on nothing, so it can't break when the other
+      two change. <code>orders</code> sits at the bottom of the stack and imports
+      from both. If you ever needed to delete a feature, you could remove
+      <code>orders</code> entirely and the marketplace would still browse.
+    </p>
+
+    <div class="note note-key">
+      <span class="note-label">The one that matters</span>
+      <p>
+        <code>AUTH_USER_MODEL = 'accounts.User'</code> is set in
+        <code>settings.py</code> <strong>before the first migration ran</strong>.
+        Django bakes the user table into every foreign key in the project. Changing
+        this after migrating means unpicking those references by hand — which is
+        why it's the first decision, not a later one.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section>
+  <p class="sec-num">02</p>
+  <h2>Following one request all the way down</h2>
+  <div class="sec-body">
+    <p>
+      Take a single click: a buyer opens <code>/listing/3/</code>. Six things
+      happen in order, and being able to narrate them is most of what
+      "understanding Django" means.
+    </p>
+
+    <figure class="fig-wide">
+      <svg viewBox="0 0 760 590" role="img"
+           aria-label="Vertical flow: browser request passes through middleware, URL routing, the view, template rendering, and back as an HTML response, with the database and context processor branching to the side.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+          </marker>
+          <marker id="ar-a" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+
+        <!-- main column boxes -->
+        <rect class="svg-box" x="60" y="24"  width="290" height="52" rx="3"/>
+        <text class="svg-label" x="76" y="46">Browser</text>
+        <text class="svg-sub"   x="76" y="63">GET /listing/3/</text>
+
+        <rect class="svg-box" x="60" y="116" width="290" height="52" rx="3"/>
+        <text class="svg-label" x="76" y="138">Middleware stack</text>
+        <text class="svg-sub"   x="76" y="155">session → auth → csrf</text>
+
+        <rect class="svg-box" x="60" y="208" width="290" height="52" rx="3"/>
+        <text class="svg-label" x="76" y="230">URL routing</text>
+        <text class="svg-sub"   x="76" y="247">produce_market → listings/urls.py</text>
+
+        <rect class="svg-box-accent" x="60" y="300" width="290" height="52" rx="3"/>
+        <text class="svg-label" x="76" y="322">listing_detail(request, pk=3)</text>
+        <text class="svg-sub"   x="76" y="339">views.py</text>
+
+        <rect class="svg-box" x="60" y="392" width="290" height="52" rx="3"/>
+        <text class="svg-label" x="76" y="414">Template render</text>
+        <text class="svg-sub"   x="76" y="431">listing_detail.html + base.html</text>
+
+        <rect class="svg-box" x="60" y="484" width="290" height="52" rx="3"/>
+        <text class="svg-label" x="76" y="506">HTTP 200</text>
+        <text class="svg-sub"   x="76" y="523">complete HTML document</text>
+
+        <!-- main column arrows -->
+        <line class="svg-line" x1="205" y1="76"  x2="205" y2="112" marker-end="url(#ar)"/>
+        <text class="svg-edge" x="216" y="99">attaches request.user</text>
+
+        <line class="svg-line" x1="205" y1="168" x2="205" y2="204" marker-end="url(#ar)"/>
+        <text class="svg-edge" x="216" y="191">matches &lt;int:pk&gt;</text>
+
+        <line class="svg-line" x1="205" y1="260" x2="205" y2="296" marker-end="url(#ar)"/>
+        <text class="svg-edge" x="216" y="283">calls with pk=3</text>
+
+        <line class="svg-line" x1="205" y1="352" x2="205" y2="388" marker-end="url(#ar)"/>
+        <text class="svg-edge" x="216" y="375">render(context)</text>
+
+        <line class="svg-line" x1="205" y1="444" x2="205" y2="480" marker-end="url(#ar)"/>
+        <text class="svg-edge" x="216" y="467">returns string</text>
+
+        <!-- database branch -->
+        <rect class="svg-box" x="470" y="300" width="230" height="52" rx="3"/>
+        <text class="svg-label" x="486" y="322">SQLite</text>
+        <text class="svg-sub"   x="486" y="339">one SELECT, two JOINs</text>
+
+        <line class="svg-line-accent" x1="350" y1="317" x2="466" y2="317" marker-end="url(#ar-a)"/>
+        <text class="svg-edge-accent" x="356" y="310">.with_related()</text>
+        <line class="svg-line" x1="466" y1="338" x2="354" y2="338" marker-end="url(#ar)"/>
+        <text class="svg-edge" x="360" y="352">listing + farmer + category</text>
+
+        <!-- context processor branch -->
+        <rect class="svg-box" x="470" y="392" width="230" height="52" rx="3"/>
+        <text class="svg-label" x="486" y="414">context processor</text>
+        <text class="svg-sub"   x="486" y="431">cart_summary()</text>
+
+        <line class="svg-line" x1="466" y1="418" x2="354" y2="418" marker-end="url(#ar)"/>
+        <text class="svg-edge" x="360" y="410">cart_item_count</text>
+
+        <!-- return to browser -->
+        <path class="svg-line svg-dash" d="M 350 510 L 730 510 L 730 50 L 354 50" marker-end="url(#ar)"/>
+        <text class="svg-edge" x="600" y="500">response travels back</text>
+      </svg>
+      <figcaption>
+        The path of GET /listing/3/. The view (highlighted) is the only stage you
+        wrote from scratch — everything above it is Django's machinery, and the
+        two side branches are the pieces that run without the view asking.
+      </figcaption>
+    </figure>
+
+    <h3>The stage most people can't explain</h3>
+    <p>
+      The context processor. Nothing in <code>listing_detail</code> passes the cart
+      count to the template — yet <code>base.html</code> renders a cart badge on
+      every page. That's <code>orders/context_processors.py</code>, registered once
+      in <code>settings.py</code> and run automatically on every single render.
+    </p>
+
+    <p class="filepath">orders/context_processors.py</p>
+<pre><code>def cart_summary(request):
+    count = 0
+    <span class="cm"># Short-circuits before touching the DB for farmers and</span>
+    <span class="cm"># logged-out visitors, so the cost is zero for most requests.</span>
+    if request.user.is_authenticated and request.user.is_buyer:
+        count = CartItem.objects.filter(
+            cart__buyer=request.user
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+    return {'cart_item_count': count}</code></pre>
+
+    <p>
+      The alternative — passing <code>cart_item_count</code> from all fourteen views —
+      works, until you add a fifteenth view and forget.
+    </p>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section>
+  <p class="sec-num">03</p>
+  <h2>Why the order tables repeat themselves</h2>
+  <div class="sec-body">
+    <p>
+      This is the design decision most worth defending, because at first glance it
+      looks like a mistake. <code>OrderItem</code> stores <code>title</code>,
+      <code>unit_price</code>, <code>unit</code> and <code>farmer</code> — all of
+      which already exist on <code>Listing</code>. A database course would call that
+      denormalisation and mark it down.
+    </p>
+    <p>Here it's the entire point.</p>
+
+    <figure class="fig-wide">
+      <svg viewBox="0 0 760 330" role="img"
+           aria-label="A Listing row whose price changes from 3800 to 9999 naira, beside an OrderItem row that keeps the original 3800 because the values were copied at checkout rather than referenced.">
+        <defs>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+          </marker>
+          <marker id="ar2-a" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+
+        <!-- Listing -->
+        <rect class="svg-box" x="30" y="60" width="250" height="150" rx="3"/>
+        <text class="svg-label" x="46" y="86">Listing  (row 7)</text>
+        <line class="svg-line" x1="30" y1="98" x2="280" y2="98"/>
+        <text class="svg-sub" x="46" y="120">title      Ofada Rice</text>
+        <text class="svg-sub" x="46" y="140">price      ₦3,800.00</text>
+        <text class="svg-sub" x="46" y="160">quantity   10</text>
+        <text class="svg-sub" x="46" y="180">farmer     amina_farms</text>
+
+        <!-- edit event -->
+        <text class="svg-edge" x="46" y="244">next week the farmer</text>
+        <text class="svg-edge" x="46" y="258">edits the price:</text>
+        <text class="svg-label" x="46" y="282" fill="var(--clay)">price → ₦9,999.00</text>
+        <line class="svg-line-clay" x1="155" y1="210" x2="155" y2="230" marker-end="url(#ar2)"
+              stroke="var(--clay)"/>
+
+        <!-- OrderItem -->
+        <rect class="svg-box-accent" x="480" y="60" width="250" height="150" rx="3"/>
+        <text class="svg-label" x="496" y="86">OrderItem  (row 12)</text>
+        <line class="svg-line" x1="480" y1="98" x2="730" y2="98" stroke="var(--accent)"/>
+        <text class="svg-sub" x="496" y="120">title       Ofada Rice</text>
+        <text class="svg-sub" x="496" y="140">unit_price  ₦3,800.00</text>
+        <text class="svg-sub" x="496" y="160">quantity    2</text>
+        <text class="svg-sub" x="496" y="180">farmer      amina_farms</text>
+        <text class="svg-edge-accent" x="496" y="244">still ₦3,800.00 —</text>
+        <text class="svg-edge-accent" x="496" y="258">what was actually paid</text>
+
+        <!-- copy arrow -->
+        <line class="svg-line-accent" x1="284" y1="120" x2="474" y2="120" marker-end="url(#ar2-a)"/>
+        <text class="svg-edge-accent" x="310" y="112">copied once, at checkout</text>
+
+        <!-- fk arrow -->
+        <line class="svg-line svg-dash" x1="474" y1="176" x2="286" y2="176" marker-end="url(#ar2)"/>
+        <text class="svg-edge" x="300" y="196">listing_id — link only, SET_NULL</text>
+
+        <text class="svg-edge" x="30" y="316">Solid = value copied at purchase time.  Dashed = reference kept for linking, never for display.</text>
+      </svg>
+      <figcaption>
+        The snapshot boundary. Editing the listing moves the left-hand row and
+        leaves the right-hand row untouched — which is why order history stays
+        truthful.
+      </figcaption>
+    </figure>
+
+    <p>
+      If <code>OrderItem</code> only held a foreign key, every past receipt would
+      silently rewrite itself whenever a farmer adjusted a price. A buyer who paid
+      ₦3,800 would open their order history and see ₦9,999. The accounting would be
+      fiction.
+    </p>
+
+    <p>There's a test that pins this down, and it's the one to point at:</p>
+
+    <p class="filepath">orders/tests.py</p>
+<pre><code>def test_order_item_snapshots_price_so_later_edits_dont_change_history(self):
+    <span class="cm"># buy at 3,800</span>
+    self.client.post(reverse('orders:add_to_cart', args=[self.listing.pk]),
+                     {'quantity': 1})
+    self._checkout()
+
+    <span class="cm"># farmer raises the price afterwards</span>
+    self.listing.price = Decimal('9999.00')
+    self.listing.save()
+
+    item = Order.objects.get().items.get()
+    <span class="hl">self.assertEqual(item.unit_price, Decimal('3800.00'))</span></code></pre>
+
+    <h3>The related decision: <code>on_delete</code></h3>
+    <p>
+      Each foreign key answers "what happens when the thing I point at is deleted?"
+      and the answers here are all different on purpose:
+    </p>
+
+    <div class="map-scroll">
+      <table class="map">
+        <thead><tr><th>Field</th><th>Rule</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="layer">Listing.farmer</td><td>CASCADE</td>
+              <td>Delete the farmer, delete their listings. Nothing is left orphaned.</td></tr>
+          <tr><td class="layer">Listing.category</td><td>PROTECT</td>
+              <td>Refuses to delete a category still in use — a guardrail against an admin mistake.</td></tr>
+          <tr><td class="layer">OrderItem.listing</td><td>SET_NULL</td>
+              <td>Deleting a listing must never erase a sale. The row survives; the link goes null.</td></tr>
+          <tr><td class="layer">Order.buyer</td><td>PROTECT</td>
+              <td>You cannot delete a customer who has order history.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      <code>order_detail.html</code> handles the SET_NULL case explicitly — if
+      <code>item.listing</code> is null it prints the stored title with
+      "(listing removed)" instead of a broken link.
+    </p>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section>
+  <p class="sec-num">04</p>
+  <h2>Inside the checkout transaction</h2>
+  <div class="sec-body">
+    <p>
+      <code>_place_order()</code> in <code>orders/views.py</code> is the most
+      demanding function in the project, because it's the only place where being
+      half-finished would be a disaster: an order written but stock not decremented,
+      or stock taken for an order that failed.
+    </p>
+
+    <figure class="fig-wide">
+      <svg viewBox="0 0 760 430" role="img"
+           aria-label="Five steps inside a transaction.atomic block: lock rows, re-check stock, write the order, write the items, decrement stock and clear the cart. A failed stock check exits to a rollback in which nothing is written.">
+        <defs>
+          <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+          </marker>
+          <marker id="ar3-c" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--clay)"/>
+          </marker>
+        </defs>
+
+        <!-- atomic container -->
+        <rect x="24" y="42" width="440" height="356" rx="5"
+              fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <text class="svg-edge-accent" x="24" y="32">with transaction.atomic():</text>
+
+        <!-- steps -->
+        <rect class="svg-box" x="48" y="62" width="392" height="46" rx="3"/>
+        <text class="svg-label" x="64" y="82">1 · lock the listing rows</text>
+        <text class="svg-sub"   x="64" y="99">select_for_update().filter(pk__in=…)</text>
+
+        <rect class="svg-box" x="48" y="128" width="392" height="46" rx="3"/>
+        <text class="svg-label" x="64" y="148">2 · re-check stock and is_active</text>
+        <text class="svg-sub"   x="64" y="165">the cart may be an hour old</text>
+
+        <rect class="svg-box" x="48" y="194" width="392" height="46" rx="3"/>
+        <text class="svg-label" x="64" y="214">3 · write Order</text>
+        <text class="svg-sub"   x="64" y="231">total_amount frozen here</text>
+
+        <rect class="svg-box" x="48" y="260" width="392" height="46" rx="3"/>
+        <text class="svg-label" x="64" y="280">4 · write OrderItems</text>
+        <text class="svg-sub"   x="64" y="297">bulk_create — one INSERT, not N</text>
+
+        <rect class="svg-box" x="48" y="326" width="392" height="46" rx="3"/>
+        <text class="svg-label" x="64" y="346">5 · decrement stock, empty cart</text>
+        <text class="svg-sub"   x="64" y="363">F('quantity_available') − quantity</text>
+
+        <!-- flow arrows -->
+        <line class="svg-line" x1="244" y1="108" x2="244" y2="124" marker-end="url(#ar3)"/>
+        <line class="svg-line" x1="244" y1="174" x2="244" y2="190" marker-end="url(#ar3)"/>
+        <line class="svg-line" x1="244" y1="240" x2="244" y2="256" marker-end="url(#ar3)"/>
+        <line class="svg-line" x1="244" y1="306" x2="244" y2="322" marker-end="url(#ar3)"/>
+
+        <!-- rollback path -->
+        <path class="svg-line-clay" d="M 440 151 L 560 151 L 560 250" marker-end="url(#ar3-c)"/>
+        <text class="svg-edge" x="452" y="143" fill="var(--clay)">not enough left</text>
+
+        <rect x="500" y="256" width="230" height="76" rx="3"
+              fill="var(--clay-bg)" stroke="var(--clay)" stroke-width="1.4"/>
+        <text class="svg-label" x="516" y="280" fill="var(--clay)">return None</text>
+        <text class="svg-sub" x="516" y="298">rollback: no order,</text>
+        <text class="svg-sub" x="516" y="314">no stock change, cart intact</text>
+
+        <text class="svg-edge" x="500" y="364">The buyer is redirected back</text>
+        <text class="svg-edge" x="500" y="380">to the cart with a message</text>
+      </svg>
+      <figcaption>
+        The atomic block. Steps 3–5 only commit together; an early return at step 2
+        unwinds everything, which is why a failed checkout can't leave stock
+        half-taken.
+      </figcaption>
+    </figure>
+
+    <h3>Why <code>F()</code> and not Python arithmetic</h3>
+    <p>The tempting version is wrong in a way that's easy to miss:</p>
+
+<pre><code><span class="bad"># WRONG — read, then write, with a gap in between</span>
+listing.quantity_available -= item.quantity
+listing.save()</code></pre>
+
+    <p>
+      That reads the value into Python, subtracts, and writes it back. If another
+      checkout commits during the gap, its subtraction is overwritten and stock
+      silently reappears. The version in the code never moves the number out of the
+      database:
+    </p>
+
+<pre><code>Listing.objects.filter(pk=item.listing_id).update(
+    <span class="hl">quantity_available=F('quantity_available') - item.quantity</span>
+)</code></pre>
+
+    <p>
+      That compiles to
+      <code>SET quantity_available = quantity_available - 2</code>. The database does
+      the arithmetic, so there is no gap to lose an update in.
+    </p>
+
+    <div class="note note-gotcha">
+      <span class="note-label">Be honest about this one</span>
+      <p>
+        <code>select_for_update()</code> does nothing on SQLite. Django's SQLite
+        backend reports <code>has_select_for_update = False</code> and silently
+        drops the <code>FOR UPDATE</code> clause from the generated SQL — verified,
+        not assumed. On SQLite the safety comes from the database-wide write lock
+        plus the atomic block; the row-level locking only becomes real on
+        PostgreSQL.
+      </p>
+      <p>
+        Saying this yourself is far stronger than being caught by it. The code is
+        written for where it's going, and the <code>F()</code> expression protects
+        you on both.
+      </p>
+    </div>
+
+    <h3>A detail you might get asked about</h3>
+    <p>
+      Step 2 checks stock against the <em class="term">locked</em> rows, but the
+      total is summed from <code>item.listing.price</code>. Both are read inside the
+      same transaction, so they agree — but the locked rows are the authoritative
+      copy, and computing the total from those too would be marginally tidier. Worth
+      knowing before someone points at it.
+    </p>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section>
+  <p class="sec-num">05</p>
+  <h2>Three layers of permission</h2>
+  <div class="sec-body">
+    <p>
+      Access control here isn't one mechanism, it's three, each catching a different
+      kind of mistake.
+    </p>
+
+    <h3>Layer 1 — decorators, for "is this the right kind of user"</h3>
+    <p>
+      <code>@farmer_required</code> and <code>@buyer_required</code> in
+      <code>accounts/decorators.py</code> gate whole views. A buyer hitting the
+      farmer dashboard gets redirected with an explanation rather than a bare 403,
+      because reaching it usually means a stale bookmark, not an attack.
+    </p>
+
+    <h3>Layer 2 — scoped lookups, for "is this <em>your</em> object"</h3>
+    <p>This is the technique worth showing off. The obvious version:</p>
+
+<pre><code><span class="bad"># fetch first, check after — the check can be forgotten</span>
+listing = get_object_or_404(Listing, pk=pk)
+if listing.farmer != request.user:
+    raise PermissionDenied</code></pre>
+
+    <p>versus what the code actually does:</p>
+
+<pre><code><span class="hl">listing = get_object_or_404(Listing, pk=pk, farmer=request.user)</span></code></pre>
+
+    <p>
+      Another farmer's listing isn't found at all — a 404, which also avoids
+      confirming that the listing exists. The permission check can't be skipped by a
+      future edit, because it isn't a separate step: <strong>it is the query</strong>.
+      That single line appears in both <code>listing_update</code> and
+      <code>listing_delete</code>, and a test proves a second farmer gets a 404.
+    </p>
+
+    <h3>Layer 3 — the database, for "can this even be represented"</h3>
+    <p>
+      <code>CartItem</code> carries a <code>UniqueConstraint</code> on
+      <code>(cart, listing)</code>. Even if a double-clicked button sent two
+      identical requests, the database refuses to store the same listing twice in
+      one cart. The view's <code>get_or_create</code> handles the normal path; the
+      constraint handles the abnormal one.
+    </p>
+
+    <div class="note note-wrong">
+      <span class="note-label">The one thing I'd change</span>
+      <p>
+        Both decorators hardcode the login URL:
+        <code>redirect(f"{'/accounts/login/'}?next={request.path}")</code>. The
+        f-string wraps a plain literal and does nothing, and the path is duplicated
+        from <code>settings.LOGIN_URL</code>. Rename that URL and these break
+        silently. It should use <code>settings.LOGIN_URL</code> with
+        <code>reverse()</code>.
+      </p>
+      <p>
+        It works, and it's tested — but if you're asked "what would you refactor?",
+        this is a much better answer than "nothing".
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section>
+  <p class="sec-num">06</p>
+  <h2>The JavaScript is optional, by design</h2>
+  <div class="sec-body">
+    <p>
+      Every interactive feature is a working HTML form <em>first</em>. The JS
+      intercepts the submit and sends it with <code>fetch()</code> instead — and if
+      that fails, hands control back to the browser:
+    </p>
+
+    <p class="filepath">static/js/main.js</p>
+<pre><code>.catch(function () {
+    <span class="cm">// Network failure — fall back to a normal submit so the</span>
+    <span class="cm">// user still gets somewhere useful.</span>
+    <span class="hl">form.submit();</span>
+});</code></pre>
+
+    <p>
+      The server side of the handshake is one header. Views call
+      <code>_wants_json(request)</code>, which checks for
+      <code>X-Requested-With: XMLHttpRequest</code>, and return either a
+      <code>JsonResponse</code> or an ordinary redirect from the same function —
+      so there is no duplicated add-to-cart logic.
+    </p>
+
+    <p>
+      Turn JavaScript off completely and the entire site still works; it just does
+      full page reloads. The cart quantity field falls back to a visible
+      <code>&lt;noscript&gt;</code> Update button, and the sort dropdown to an Apply
+      button. That's <em class="term">progressive enhancement</em>, and it's worth
+      naming out loud — it's the difference between "I added AJAX" and "I chose an
+      architecture".
+    </p>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section>
+  <p class="sec-num">07</p>
+  <h2>Where the queries are kept honest</h2>
+  <div class="sec-body">
+    <p>
+      Rendering nine listing cards means touching each listing's farmer and category.
+      Done naively that's 1 query for the listings plus 2 per card — nineteen round
+      trips for one page. The custom queryset fixes it in one place:
+    </p>
+
+    <p class="filepath">listings/models.py</p>
+<pre><code>class ListingQuerySet(models.QuerySet):
+    def available(self):
+        return self.filter(is_active=True, quantity_available__gt=0)
+
+    def with_related(self):
+        <span class="hl">return self.select_related('farmer', 'category')</span>
+
+    def search(self, term):
+        if not term:
+            return self
+        return self.filter(
+            Q(title__icontains=term)
+            | Q(description__icontains=term)
+            | Q(farmer__location__icontains=term)
+        )</code></pre>
+
+    <p>
+      Because these are chainable, the marketplace view reads as a sentence —
+      <code>Listing.objects.available().with_related().search(term)</code> — and the
+      definition of "available" lives in exactly one place. When you later decide
+      sold-out produce should still be visible, you change one method, not six views.
+    </p>
+
+    <p>
+      The same instinct shows up on the farmer dashboard, where revenue is a single
+      aggregate rather than a Python loop over every sale:
+    </p>
+
+<pre><code>totals = sales.aggregate(
+    units=Sum('quantity'),
+    <span class="hl">revenue=Sum(F('unit_price') * F('quantity'), …)</span>,
+)</code></pre>
+
+    <p>
+      The multiplication and the sum both happen in SQL. With ten sales the
+      difference is invisible; the reason to write it this way is that it stays flat
+      when there are ten thousand.
+    </p>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section>
+  <p class="sec-num">08</p>
+  <h2>Questions to have an answer ready for</h2>
+  <div class="sec-body">
+    <ul class="qa">
+      <li>
+        <p class="q">Why extend <code>AbstractUser</code> instead of adding a Profile model?</p>
+        <p class="a">
+          Every user here <em>must</em> be a farmer or a buyer — there's no user
+          without a role. A one-to-one profile would create a row for every user
+          anyway and add a join to every query. The role belongs on the user.
+        </p>
+      </li>
+      <li>
+        <p class="q">Why does <code>OrderItem</code> duplicate the listing's data?</p>
+        <p class="a">
+          So order history stays true when a farmer edits a price. Section 03 — and
+          there's a test named after exactly this.
+        </p>
+      </li>
+      <li>
+        <p class="q">What happens if two buyers order the last crate simultaneously?</p>
+        <p class="a">
+          Both enter <code>_place_order</code>; the transaction serialises them. The
+          second one's stock re-check fails, it returns <code>None</code>, everything
+          rolls back, and that buyer is sent to the cart with an explanation. On
+          PostgreSQL <code>select_for_update()</code> enforces the ordering; on
+          SQLite the database-wide write lock does.
+        </p>
+      </li>
+      <li>
+        <p class="q">How do you stop one farmer editing another's listing?</p>
+        <p class="a">
+          The lookup itself is scoped: <code>get_object_or_404(Listing, pk=pk,
+          farmer=request.user)</code>. It isn't a check that could be forgotten — it's
+          the query.
+        </p>
+      </li>
+      <li>
+        <p class="q">Why <code>DecimalField</code> for money and not <code>Float</code>?</p>
+        <p class="a">
+          Floats can't represent decimal fractions exactly, so money arithmetic
+          drifts. <code>DecimalField</code> stores exact values — the correct choice
+          for currency in any database.
+        </p>
+      </li>
+      <li>
+        <p class="q">What would you do differently?</p>
+        <p class="a">
+          Fix the hardcoded login URL in the decorators (Section 05), move to
+          PostgreSQL so the row locking is real, and add a
+          <code>quantity_available &gt;= 0</code> check constraint so the database
+          itself refuses negative stock.
+        </p>
+      </li>
+      <li>
+        <p class="q">Is it tested?</p>
+        <p class="a">
+          39 tests. The behavioural ones live per-app; <code>tests_smoke.py</code>
+          renders every page as the role meant to see it, which is what catches a
+          broken <code>{% url %}</code> tag. Run <code>python manage.py test</code>.
+        </p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================================================================= -->
+<section>
+  <p class="sec-num">09</p>
+  <h2>Read the code in this order</h2>
+  <div class="sec-body">
+    <p>
+      If you want to reread the project itself rather than this page, following the
+      dependencies beats opening files alphabetically:
+    </p>
+
+    <div class="map-scroll">
+      <table class="map">
+        <thead><tr><th>#</th><th>File</th><th>What to notice</th></tr></thead>
+        <tbody>
+          <tr><td class="layer">1</td><td>produce_market/settings.py</td>
+              <td>Which apps exist, where templates live, <code>AUTH_USER_MODEL</code>.</td></tr>
+          <tr><td class="layer">2</td><td>accounts/models.py</td>
+              <td>The role field everything else branches on.</td></tr>
+          <tr><td class="layer">3</td><td>listings/models.py</td>
+              <td>The queryset methods — the vocabulary the views are written in.</td></tr>
+          <tr><td class="layer">4</td><td>orders/models.py</td>
+              <td>The snapshot fields, and each <code>on_delete</code> rule.</td></tr>
+          <tr><td class="layer">5</td><td>orders/views.py</td>
+              <td><code>_place_order</code>. The hardest and most interesting function.</td></tr>
+          <tr><td class="layer">6</td><td>templates/base.html</td>
+              <td>What every page inherits, and where the role-based nav splits.</td></tr>
+          <tr><td class="layer">7</td><td>tests_smoke.py</td>
+              <td>Every page, and who is allowed to see it — the app in one file.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      One last suggestion: read <code>orders/tests.py</code> before you read
+      <code>orders/views.py</code>. The test names describe the intended behaviour in
+      plain English, so the view stops being a wall of code and becomes the answer to
+      questions you've already read.
+    </p>
+  </div>
+</section>
+
+<div class="colophon">
+  <p>
+    FarmLink — Produce Marketplace · 3MTT Capstone<br>
+    Django 6.1 · server-rendered templates · vanilla JS · SQLite in development<br>
+    Run it: <code>python manage.py runserver</code> · Test it: <code>python manage.py test</code>
+  </p>
+</div>
+
+</div>

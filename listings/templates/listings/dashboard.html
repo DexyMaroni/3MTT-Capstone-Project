@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Your farm dashboard</h1>
+    <p class="muted">Manage what you have for sale and see how it's moving.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'listings:create' %}">+ Add listing</a>
+</div>
+
+<div class="stat-row">
+  <div class="stat">
+    <p class="stat-value">{{ active_count }}</p>
+    <p class="stat-label">Active listings</p>
+  </div>
+  <div class="stat">
+    <p class="stat-value">{{ out_of_stock_count }}</p>
+    <p class="stat-label">Out of stock</p>
+  </div>
+  <div class="stat">
+    <p class="stat-value">{{ units_sold }}</p>
+    <p class="stat-label">Units sold</p>
+  </div>
+  <div class="stat">
+    <p class="stat-value">&#8358;{{ revenue|floatformat:2 }}</p>
+    <p class="stat-label">Revenue</p>
+  </div>
+</div>
+
+<h2 class="section-title">Your listings</h2>
+
+{% if listings %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Produce</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>In stock</th>
+          <th>Status</th>
+          <th><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for listing in listings %}
+          <tr>
+            <td>
+              <a href="{{ listing.get_absolute_url }}">{{ listing.title }}</a>
+            </td>
+            <td>{{ listing.category.name }}</td>
+            <td>&#8358;{{ listing.price|floatformat:2 }} / {{ listing.get_unit_display|lower }}</td>
+            <td>{{ listing.quantity_available }}</td>
+            <td>
+              {% if not listing.is_active %}
+                <span class="pill pill-muted">Hidden</span>
+              {% elif listing.quantity_available == 0 %}
+                <span class="pill pill-warn">Sold out</span>
+              {% else %}
+                <span class="pill pill-ok">Live</span>
+              {% endif %}
+            </td>
+            <td class="row-actions">
+              <a href="{% url 'listings:update' listing.pk %}">Edit</a>
+              <a class="text-danger" href="{% url 'listings:delete' listing.pk %}">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="empty-state">
+    <h3>You haven't listed anything yet</h3>
+    <p>Add your first crop and buyers will be able to find it straight away.</p>
+    <a class="btn btn-primary" href="{% url 'listings:create' %}">Add your first listing</a>
+  </div>
+{% endif %}
+{% endblock %}

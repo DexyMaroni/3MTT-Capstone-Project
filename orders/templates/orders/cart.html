@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Your cart &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<h1>Your cart</h1>
+
+{% if items %}
+  <div class="cart-layout">
+    <div class="table-wrap">
+      <table class="data-table cart-table">
+        <thead>
+          <tr>
+            <th>Produce</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+            <th><span class="sr-only">Remove</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+            <tr data-cart-row data-item-id="{{ item.pk }}">
+              <td>
+                <a href="{{ item.listing.get_absolute_url }}">{{ item.listing.title }}</a>
+                <p class="muted small">from {{ item.listing.farmer.display_name }}</p>
+              </td>
+              <td>&#8358;{{ item.listing.price|floatformat:2 }}</td>
+              <td>
+                {# Posts on change; JS upgrades this to a background update. #}
+                <form method="post" class="quantity-form"
+                      action="{% url 'orders:update_item' item.pk %}">
+                  {% csrf_token %}
+                  <input type="number" name="quantity" value="{{ item.quantity }}"
+                         min="1" max="{{ item.listing.quantity_available }}"
+                         aria-label="Quantity of {{ item.listing.title }}">
+                  <noscript><button type="submit">Update</button></noscript>
+                </form>
+              </td>
+              <td data-subtotal>&#8358;{{ item.subtotal|floatformat:2 }}</td>
+              <td>
+                <form method="post" action="{% url 'orders:remove_item' item.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="link-button text-danger">Remove</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <aside class="card summary-card">
+      <h2>Summary</h2>
+      <div class="summary-row">
+        <span>Items</span>
+        <strong data-cart-count>{{ cart.item_count }}</strong>
+      </div>
+      <div class="summary-row summary-total">
+        <span>Total</span>
+        <strong>&#8358;<span data-cart-total>{{ cart.total|floatformat:2 }}</span></strong>
+      </div>
+      <a class="btn btn-primary btn-block" href="{% url 'orders:checkout' %}">Proceed to checkout</a>
+      <a class="btn btn-ghost btn-block" href="{% url 'listings:list' %}">Continue shopping</a>
+    </aside>
+  </div>
+{% else %}
+  <div class="empty-state">
+    <h3>Your cart is empty</h3>
+    <p>Browse the marketplace and add some produce.</p>
+    <a class="btn btn-primary" href="{% url 'listings:list' %}">Browse produce</a>
+  </div>
+{% endif %}
+{% endblock %}

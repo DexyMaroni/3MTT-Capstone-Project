@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<h1>Checkout</h1>
+
+<div class="cart-layout">
+  <form method="post" class="card form-card">
+    {% csrf_token %}
+    <h2>Delivery details</h2>
+    {% include 'partials/_form_fields.html' with form=form %}
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Place order</button>
+      <a class="btn btn-ghost" href="{% url 'orders:cart' %}">Back to cart</a>
+    </div>
+    <p class="muted small">
+      Payment is arranged directly with the farmer after the order is confirmed.
+    </p>
+  </form>
+
+  <aside class="card summary-card">
+    <h2>Your order</h2>
+    <ul class="summary-items">
+      {% for item in items %}
+        <li>
+          <span>{{ item.quantity }} &times; {{ item.listing.title }}</span>
+          <strong>&#8358;{{ item.subtotal|floatformat:2 }}</strong>
+        </li>
+      {% endfor %}
+    </ul>
+    <div class="summary-row summary-total">
+      <span>Total</span>
+      <strong>&#8358;{{ cart.total|floatformat:2 }}</strong>
+    </div>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Your orders &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<h1>Your orders</h1>
+
+{% if orders %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Placed</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+          <tr>
+            <td><a href="{{ order.get_absolute_url }}">{{ order.reference }}</a></td>
+            <td>{{ order.created_at|date:'j M Y, H:i' }}</td>
+            <td>{{ order.items.count }}</td>
+            <td>&#8358;{{ order.total_amount|floatformat:2 }}</td>
+            <td>{% include 'orders/_status_pill.html' with status=order.status label=order.get_status_display %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="empty-state">
+    <h3>No orders yet</h3>
+    <p>When you buy produce, your orders will show up here.</p>
+    <a class="btn btn-primary" href="{% url 'listings:list' %}">Browse produce</a>
+  </div>
+{% endif %}
+{% endblock %}

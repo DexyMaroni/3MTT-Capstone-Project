@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Log in &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<div class="narrow">
+  <h1>Welcome back</h1>
+
+  <form method="post" class="card form-card">
+    {% csrf_token %}
+    {% include 'partials/_form_fields.html' with form=form %}
+    {# Carries through where the user was headed before being asked to log in. #}
+    <input type="hidden" name="next" value="{{ next }}">
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Log in</button>
+    </div>
+  </form>
+
+  <p class="form-footnote">
+    New here? <a href="{% url 'accounts:register' %}">Create an account</a>
+  </p>
+</div>
+{% endblock %}

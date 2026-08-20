@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ listing.title }} &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb">
+  <a href="{% url 'listings:list' %}">Marketplace</a>
+  <span>/</span>
+  <a href="{{ listing.category.get_absolute_url }}">{{ listing.category.name }}</a>
+  <span>/</span>
+  <span>{{ listing.title }}</span>
+</nav>
+
+<div class="detail-layout">
+  <div class="detail-image">
+    {% comment %}
+    Here the photo is content rather than decoration, so it needs a real
+    description. Falls back to naming the produce when the farmer has not
+    written one -- thin, but better than an empty alt on a content image.
+    {% endcomment %}
+    {% if listing.image %}
+      <img src="{{ listing.image.url }}"
+           alt="{% if listing.image_alt %}{{ listing.image_alt }}{% else %}Photo of {{ listing.title }}{% endif %}">
+      {% if listing.image_credit %}
+        {# CC BY and CC BY-SA both require the photographer to be named. #}
+        <p class="image-credit">Photo: {{ listing.image_credit }}</p>
+      {% endif %}
+    {% else %}
+      <div class="image-placeholder large" aria-hidden="true">{{ listing.title|first|upper }}</div>
+    {% endif %}
+  </div>
+
+  <div class="detail-info">
+    {% if not listing.is_active %}
+      <p class="notice notice-warn">This listing is hidden from buyers.</p>
+    {% endif %}
+
+    <p class="card-category">{{ listing.category.name }}</p>
+    <h1>{{ listing.title }}</h1>
+
+    <p class="detail-price">
+      &#8358;{{ listing.price|floatformat:2 }}
+      <span class="per-unit">per {{ listing.get_unit_display|lower }}</span>
+    </p>
+
+    <dl class="detail-facts">
+      <div>
+        <dt>Sold by</dt>
+        <dd>{{ listing.farmer.display_name }}</dd>
+      </div>
+      {% if listing.farmer.location %}
+        <div>
+          <dt>Location</dt>
+          <dd>{{ listing.farmer.location }}</dd>
+        </div>
+      {% endif %}
+      <div>
+        <dt>Available</dt>
+        <dd>
+          {% if listing.in_stock %}
+            {{ listing.quantity_available }} {{ listing.get_unit_display|lower }}{{ listing.quantity_available|pluralize }}
+          {% else %}
+            <span class="text-danger">Out of stock</span>
+          {% endif %}
+        </dd>
+      </div>
+      <div>
+        <dt>Listed</dt>
+        <dd>{{ listing.created_at|date:'j M Y' }}</dd>
+      </div>
+    </dl>
+
+    {% if listing.description %}
+      <div class="detail-description">
+        <h2>About this produce</h2>
+        <p>{{ listing.description|linebreaksbr }}</p>
+      </div>
+    {% endif %}
+
+    {% if user.is_authenticated and user.is_buyer %}
+      {% if listing.in_stock %}
+        <form class="buy-box add-to-cart-form" method="post"
+              action="{% url 'orders:add_to_cart' listing.pk %}">
+          {% csrf_token %}
+          <div class="quantity-stepper" data-stepper>
+            <button type="button" data-step="-1" aria-label="Decrease quantity">&minus;</button>
+            <input type="number" name="quantity" value="1" min="1"
+                   max="{{ listing.quantity_available }}" aria-label="Quantity">
+            <button type="button" data-step="1" aria-label="Increase quantity">+</button>
+          </div>
+          <button type="submit" class="btn btn-primary">Add to cart</button>
+        </form>
+        <p class="subtotal-preview" data-price="{{ listing.price }}">
+          Subtotal: <strong data-subtotal>&#8358;{{ listing.price|floatformat:2 }}</strong>
+        </p>
+      {% else %}
+        <p class="notice">This produce is sold out. Check back after the next harvest.</p>
+      {% endif %}
+    {% elif user.is_authenticated and user == listing.farmer %}
+      <div class="owner-actions">
+        <a class="btn btn-outline" href="{% url 'listings:update' listing.pk %}">Edit listing</a>
+        <a class="btn btn-danger-outline" href="{% url 'listings:delete' listing.pk %}">Delete</a>
+      </div>
+    {% elif not user.is_authenticated %}
+      <p class="notice">
+        <a href="{% url 'accounts:login' %}?next={{ request.path }}">Log in</a> as a buyer to order this produce.
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+{% if related %}
+  <section class="related">
+    <h2>More {{ listing.category.name|lower }}</h2>
+    <div class="listing-grid">
+      {% for item in related %}
+        {% include 'listings/_listing_card.html' with listing=item %}
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
+{% endblock %}

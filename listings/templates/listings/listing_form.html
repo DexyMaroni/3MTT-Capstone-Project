@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ heading }} &mdash; FarmLink{% endblock %}
+
+{% block content %}
+<div class="narrow">
+  <h1>{{ heading }}</h1>
+
+  {# enctype is required for the image upload to come through. #}
+  <form method="post" enctype="multipart/form-data" class="card form-card">
+    {% csrf_token %}
+    {% include 'partials/_form_fields.html' with form=form %}
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
+      <a class="btn btn-ghost" href="{% url 'listings:dashboard' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
