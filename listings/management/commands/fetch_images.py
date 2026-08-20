@@ -146,7 +146,18 @@ class Command(BaseCommand):
             self.stdout.write('Nothing to fetch.')
             return
 
-        metadata = self.fetch_metadata(list(wanted))
+        try:
+            metadata = self.fetch_metadata(list(wanted))
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            # No internet, or Commons is unreachable. The site still works --
+            # cards fall back to the coloured-letter placeholder -- so say what
+            # happened plainly instead of dumping a traceback on whoever is
+            # setting the project up.
+            raise CommandError(
+                f'Could not reach Wikimedia Commons ({exc}).\n'
+                'The site runs fine without photos; listings show a letter '
+                'placeholder instead. Re-run this command once you are online.'
+            ) from exc
 
         saved = failed = 0
         for filename, listing in wanted.items():

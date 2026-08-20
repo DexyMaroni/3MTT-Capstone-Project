@@ -23,39 +23,54 @@ add produce to a cart, check out with delivery details, and track order status.
 ## Running it
 
 ```bash
-# 1. Activate the virtual environment
+# 1. Create and activate a virtual environment
+python -m venv .venv
 .venv\Scripts\activate          # Windows
 # source .venv/bin/activate     # macOS / Linux
 
-# 2. Install dependencies (already done if .venv exists)
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Set up the database
-python manage.py migrate
+# 3. Build the database, load demo data, attach the photos
+python manage.py setup_demo
 
-# 4. Load demo data (optional, but makes the app immediately usable)
-python manage.py seed_demo
-
-# 5. Fetch the produce photos
-python manage.py fetch_images
-
-# 6. Start the server
+# 4. Start the server
 python manage.py runserver
 ```
 
 Open http://127.0.0.1:8000/
 
-### Why step 5 exists
+**No internet connection is needed.** The sixteen produce photos are committed
+under `listings/seed_images/`, and `setup_demo` copies them in. Everything runs
+from the repository as cloned.
 
-`media/` is not in version control (see `.gitignore`), so a fresh clone has no
-photos and the marketplace shows a coloured letter on each card instead.
-`fetch_images` downloads sixteen freely licensed photos from Wikimedia Commons,
-crops them to a uniform 4:3 at 1200×900, and records the photographer and
-licence on each listing — those are Creative Commons images, and CC BY / CC BY-SA
-both require attribution, which is why the credit appears under the picture.
+`setup_demo` is safe to re-run — it will not duplicate anything. It is just
+these three in the required order:
 
-The command is safe to re-run: it skips listings that already have a photo.
-Use `--force` to replace them.
+```bash
+python manage.py migrate       # create the tables
+python manage.py seed_demo     # categories, users, 16 listings
+python manage.py load_images   # attach the bundled photos
+```
+
+To start over from nothing, delete `db.sqlite3` and `media/`, then run
+`setup_demo` again.
+
+### Where the photos come from
+
+`media/` is runtime upload territory and stays out of git. The demo photos live
+in `listings/seed_images/` with a `manifest.json` recording each one's
+photographer, licence and description.
+
+Two commands manage them:
+
+| Command | Needs internet | What it does |
+| ------- | -------------- | ------------ |
+| `load_images`  | No  | Copies the committed photos into `media/`. This is what setup uses. |
+| `fetch_images` | Yes | Re-downloads the originals from Wikimedia Commons, crops them to 4:3 at 1200×900, and rebuilds the seed set. |
+
+They are Creative Commons images, and CC BY / CC BY-SA require attribution —
+which is why a credit line appears under each photo on its detail page.
 
 ### Demo accounts
 
@@ -88,7 +103,8 @@ accounts/                 Users and authentication
 listings/                 Produce catalogue
   models.py               Category, Listing
   views.py                Marketplace grid, detail page, farmer dashboard/CRUD
-  management/commands/    seed_demo
+  seed_images/            The 16 demo photos + manifest.json (credits, alt text)
+  management/commands/    setup_demo, seed_demo, load_images, fetch_images
 orders/                   Cart and checkout
   models.py               Cart, CartItem, Order, OrderItem
   views.py                Cart operations, checkout, order tracking

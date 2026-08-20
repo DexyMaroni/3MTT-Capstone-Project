@@ -22,10 +22,12 @@ db.sqlite3-journal
 # Output of "collectstatic". Generated from static/, never edited by hand.
 staticfiles/
 
-# Uploaded and fetched produce photos (~4 MB of binaries). "manage.py
-# fetch_images" rebuilds the demo set from Wikimedia Commons, and real uploads
-# belong on object storage rather than in git history, where they can never be
-# removed. See README for the one command a fresh clone needs.
+# Runtime uploads. Anything a farmer uploads through the site lands here, and
+# it is rebuildable for the demo data, so it stays out of git.
+#
+# Note this is NOT where the demo photos live: those are committed under
+# listings/seed_images/ so the project works offline. "manage.py load_images"
+# copies them from there into media/ at setup time.
 media/
 
 # Secrets. Environment variables are read in settings.py; keep the actual

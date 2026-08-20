@@ -168,6 +168,7 @@ class Command(BaseCommand):
                 f'  Buyers:  {", ".join(b[0] for b in BUYERS)}\n'
                 f'  Admin:   admin  (http://127.0.0.1:8000/admin/)\n\n'
                 f'Listings start without photos. Run "python manage.py '
-                f'fetch_images" to pull them from Wikimedia Commons.'
+                f'load_images" to attach the ones bundled with the repo, '
+                f'or "manage.py setup_demo" to do everything at once.'
             )
         )
